@@ -1,6 +1,7 @@
 # 🎓 AI Study Buddy — Intelligent Learning Assistant
 
 An AI-powered study companion that answers academic questions, clarifies concepts, and generates quizzes using LLM (DeepSeek via OpenRouter API). 
+🔗 **Live Demo:** https://ai-study-buddy-vic1.onrender.com/
 
 ---
 
@@ -61,7 +62,7 @@ AI-Study-Buddy/
    python app.py
 ---
 
-✅ Open browser → http://localhost:5000/
+✅ Open live demo ->https://ai-study-buddy-vic1.onrender.com/
 
 ---
 
