@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Study Buddy</title>
+    <style>
+        :root {
+            --primary: #3a7bd5;
+            --secondary: #00d2ff;
+            --background: #f7f9fb;
+            --surface: #fff;
+            --text: #222;
+            --bubble-user: #3a7bd5;
+            --bubble-ai: #e3eaf1;
+            --feature: #3a7bd5;
+            --progress-bg: #e3eaf1;
+            --progress-bar: linear-gradient(90deg, #3a7bd5 0%, #00d2ff 100%);
+        }
+        body.dark {
+            --primary: #00b894;
+            --secondary: #0984e3;
+            --background: #181c24;
+            --surface: #232a36;
+            --text: #f1f2f6;
+            --bubble-user: #0984e3;
+            --bubble-ai: #232a36;
+            --feature: #00b894;
+            --progress-bg: #232a36;
+            --progress-bar: linear-gradient(90deg, #00b894 0%, #0984e3 100%);
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--background);
+            color: var(--text);
+            transition: background 0.3s, color 0.3s;
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        #chat-box {
+            height: 350px;
+            border-radius: 10px;
+            border: 1px solid #cfd8dc;
+            background: var(--surface);
+            padding: 15px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px #e3eaf1;
+            transition: background 0.3s;
+        }
+        .chat-msg {
+            margin: 8px 0;
+            display: flex;
+        }
+        .chat-msg.user {
+            justify-content: flex-end;
+        }
+        .chat-msg.ai {
+            justify-content: flex-start;
+        }
+        .bubble {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 1rem;
+            line-height: 1.4;
+            box-shadow: 0 1px 2px #e3eaf1;
+        }
+        .user .bubble {
+            background: var(--bubble-user);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+        .ai .bubble {
+            background: var(--bubble-ai);
+            color: var(--text);
+            border-bottom-left-radius: 4px;
+        }
+        #input-area {
+            display: flex;
+            gap: 10px;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 18px;
+            border: 1px solid #cfd8dc;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.2s;
+            background: var(--surface);
+            color: var(--text);
+        }
+        #user-input:focus {
+            border: 1.5px solid var(--primary);
+        }
+        button {
+            padding: 10px 20px;
+            border-radius: 18px;
+            border: none;
+            background: var(--progress-bar);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: linear-gradient(90deg, var(--secondary) 0%, var(--primary) 100%);
+        }
+        .feature-list {
+            margin: 25px 0 10px 0;
+            padding: 0;
+            list-style: none;
+            color: var(--feature);
+            font-size: 0.98rem;
+        }
+        .feature-list li {
+            margin-bottom: 4px;
+            padding-left: 18px;
+            position: relative;
+        }
+        .feature-list li:before {
+            content: "✔";
+            position: absolute;
+            left: 0;
+            color: #00b894;
+            font-size: 1rem;
+        }
+        .progress-bar-bg {
+            width: 100%;
+            height: 16px;
+            background: var(--progress-bg);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--progress-bar);
+            border-radius: 8px;
+            transition: width 0.4s;
+        }
+        #progress-label {
+            font-size: 0.95rem;
+            color: var(--feature);
+            margin-bottom: 8px;
+        }
+        .toggle-theme-btn {
+            float: right;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            background: #636e72;
+            color: #fff;
+            font-size: 0.95rem;
+            padding: 7px 16px;
+            border-radius: 16px;
+            border: none;
+            cursor: pointer;
+        }
+        .toggle-theme-btn:hover {
+            background: #222f3e;
+        }
+    </style>
+</head>
+<body>
+    <button class="toggle-theme-btn" onclick="toggleTheme()" id="theme-btn">🌙 Dark Mode</button>
+    <h1>AI Study Buddy 🤖</h1>
+    <ul class="feature-list">
+        <li>Natural Language Q&amp;A</li>
+        <li>Quiz Generator (topic &amp; difficulty)</li>
+        <li>Progress Tracking</li>
+        <li>OpenRouter API Integration</li>
+        <li>Light/Dark Mode</li>
+    </ul>
+    <div id="progress-label">Questions asked: <span id="progress-count">0</span></div>
+    <div class="progress-bar-bg">
+        <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+    <div id="chat-box"></div>
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Ask me anything..." autocomplete="off" onkeydown="if(event.key==='Enter'){askAI();}">
+        <button onclick="askAI()">Ask</button>
+    </div>
+    <div style="margin-top:18px;">
+        <button onclick="showQuizPrompt()" style="background:#00b894; margin-right:8px;">Generate Quiz</button>
+        <button onclick="clearChat()" style="background:#636e72;">Clear Chat</button>
+    </div>
+    <div id="quiz-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:12px; padding:24px 18px; min-width:300px; box-shadow:0 2px 12px #b2bec3; position:relative;">
+            <h3 style="margin-top:0; color:#3a7bd5;">Quiz Generator</h3>
+            <input type="text" id="quiz-topic" placeholder="Topic (e.g. Python)" style="width:90%;padding:8px;margin-bottom:8px;border-radius:8px;border:1px solid #cfd8dc;">
+            <select id="quiz-difficulty" style="width:90%;padding:8px;margin-bottom:12px;border-radius:8px;border:1px solid #cfd8dc;">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+            <div style="text-align:right;">
+                <button onclick="generateQuiz()" style="background:#3a7bd5;">Generate</button>
+                <button onclick="hideQuizPrompt()" style="background:#636e72;">Cancel</button>
+            </div>
+            <div id="quiz-result" style="margin-top:12px; color:#222;"></div>
+        </div>
+    </div>
+    <script>
+    // Theme toggle
+    function toggleTheme() {
+        const body = document.body;
+        const btn = document.getElementById('theme-btn');
+        body.classList.toggle('dark');
+        if (body.classList.contains('dark')) {
+            btn.textContent = "☀️ Light Mode";
+            localStorage.setItem("theme", "dark");
+        } else {
+            btn.textContent = "🌙 Dark Mode";
+            localStorage.setItem("theme", "light");
+        }
+    }
+    // On load, set theme from localStorage
+    (function() {
+        const theme = localStorage.getItem("theme");
+        if (theme === "dark") {
+            document.body.classList.add("dark");
+            document.getElementById('theme-btn').textContent = "☀️ Light Mode";
+        }
+    })();
+
+    // Progress tracking
+    async function updateProgress() {
+        try {
+            const apiHostname = localStorage.getItem("apiHostname") || "localhost";
+            const apiPort = localStorage.getItem("apiPort") || "5000";
+            const apiUrl = `http://${apiHostname}:${apiPort}/progress`;
+            const res = await fetch(apiUrl);
+            if (!res.ok) return;
+            const data = await res.json();
+            document.getElementById("progress-count").textContent = data.questions_asked;
+            let percent = Math.min(100, data.questions_asked * 10);
+            document.getElementById("progress-bar").style.width = percent + "%";
+        } catch {}
+    }
+
+    function appendMessage(role, text) {
+        const chatBox = document.getElementById("chat-box");
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "chat-msg " + (role === "user" ? "user" : "ai");
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.innerHTML = text.replace(/\n/g, "<br>");
+        msgDiv.appendChild(bubble);
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function askAI() {
+        const input = document.getElementById("user-input").value.trim();
+        if (!input) return;
+        appendMessage("user", input);
+
+        try {
+            const apiHostname = localStorage.getItem("apiHostname") || "localhost";
+            const apiPort = localStorage.getItem("apiPort") || "5000";
+            const apiUrl = `http://${apiHostname}:${apiPort}/ask`;
+
+            const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({ question: input })
+            });
+
+            if (!response.ok) throw new Error("Network error occurred");
+            const data = await response.json();
+            if (data.answer) {
+                appendMessage("ai", data.answer);
+            } else if (data.error) {
+                appendMessage("ai", `<span style="color:red"><b>Error:</b> ${data.error}</span>`);
+            }
+        } catch (error) {
+            appendMessage("ai", `<span style="color:red"><b>Error:</b> ${error.message}</span>`);
+        }
+        document.getElementById("user-input").value = "";
+        updateProgress();
+    }
+
+    function clearChat() {
+        document.getElementById("chat-box").innerHTML = "";
+    }
+
+    // Quiz modal logic
+    function showQuizPrompt() {
+        document.getElementById("quiz-modal").style.display = "flex";
+        document.getElementById("quiz-result").innerHTML = "";
+        document.getElementById("quiz-topic").value = "";
+        document.getElementById("quiz-difficulty").value = "easy";
+    }
+    function hideQuizPrompt() {
+        document.getElementById("quiz-modal").style.display = "none";
+    }
+    async function generateQuiz() {
+        const topic = document.getElementById("quiz-topic").value.trim();
+        const difficulty = document.getElementById("quiz-difficulty").value;
+        const quizResult = document.getElementById("quiz-result");
+        if (!topic) {
+            quizResult.innerHTML = "<span style='color:red'>Please enter a topic.</span>";
+            return;
+        }
+        quizResult.innerHTML = "Generating quiz...";
+        try {
+            const apiHostname = localStorage.getItem("apiHostname") || "localhost";
+            const apiPort = localStorage.getItem("apiPort") || "5000";
+            const apiUrl = `http://${apiHostname}:${apiPort}/quiz`;
+            const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({ topic, difficulty })
+            });
+            if (!response.ok) throw new Error("Quiz generation failed");
+            const data = await response.json();
+            if (data.quiz) {
+                quizResult.innerHTML = `<pre style="white-space:pre-wrap;font-family:inherit;background:#f7f9fb;border-radius:8px;padding:10px;">${data.quiz}</pre>`;
+            } else if (data.error) {
+                quizResult.innerHTML = `<span style="color:red"><b>Error:</b> ${data.error}</span>`;
+            }
+        } catch (error) {
+            quizResult.innerHTML = `<span style="color:red"><b>Error:</b> ${error.message}</span>`;
+        }
+    }
+
+    // Initial progress update
+    updateProgress();
+    </script>
+</body>
+</html>
